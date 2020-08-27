@@ -1,0 +1,87 @@
+---
+- name: "设置 Centos7 的阿里云镜像"
+  get_url:
+    url: "http://mirrors.aliyun.com/repo/Centos-7.repo"
+    dest: "/etc/yum.repos.d/CentOS-Base.repo"
+    force: "yes"
+
+- name: "安装 epel-release"
+  yum:
+    name: "epel-release"
+    state: "present"
+    update_cache: "yes"
+
+- name: "设置 Epel7 的阿里云镜像"
+  get_url:
+    url: "http://mirrors.aliyun.com/repo/epel-7.repo"
+    dest: "/etc/yum.repos.d/epel.repo"
+    force: "yes"
+
+- name: "关闭 Firewalld"
+  service:
+    name: "firewalld"
+    state: "stopped"
+    enabled: "no"
+  ignore_errors: "yes"
+
+- name: "安装 libselinux 依赖"
+  yum:
+    name: "libselinux-python"
+    state: "present"
+
+- name: "关闭 selinux"
+  selinux:
+    state: "disabled"
+
+- name: "安装 Docker 依赖"
+  yum:
+    name: ["yum-utils","device-mapper-persistent-data","lvm2","bridge-utils"]
+    state: "present"
+
+- name: "添加 Docker 仓库"
+  yum_repository:
+    name: "docker-ce-stable"
+    description: "docker ce"
+    baseurl: "https://mirrors.aliyun.com/docker-ce/linux/centos/7/$basearch/stable"
+    enabled: "1"
+    gpgcheck: "1"
+    gpgkey: "https://mirrors.aliyun.com/docker-ce/linux/centos/gpg"
+
+- name: "安装 Docker"
+  yum:
+    update_cache: "yes"
+    name: "docker-ce"
+    state: "present"
+
+- name: "创建 Docker 目录"
+  file:
+    path: "{{ item }}"
+    state: "directory"
+  with_items:
+    - "/etc/docker"
+
+- name: "生成 Docker 配置文件"
+  template:
+    src: "daemon.json"
+    dest: "/etc/docker/daemon.json"
+
+- name: "启动 Docker"
+  service:
+    name: "docker"
+    state: "started"
+    enabled: "yes"
+
+- name: "添加 ceph 仓库"
+  yum_repository:
+    name: "ceph"
+    description: "docker ce"
+    baseurl: "https://mirrors.aliyun.com/ceph/rpm-octopus/el7/x86_64/"
+    enabled: "1"
+    gpgcheck: "1"
+    gpgkey: "https://mirrors.aliyun.com/ceph/keys/release.asc"
+
+- name: "安装常用工具"
+  yum:
+    name: ["vim","htop","lsof","strace","tree","net-tools","python3"]
+    state: "present"
+

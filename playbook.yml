@@ -1,0 +1,11 @@
+---
+- hosts: "all"
+  roles:
+    - "ceph"
+
+- hosts: "mon"
+  tasks:
+    - name: "安装 Docker 依赖"
+      yum:
+        name: ["cephadm","ceph-common"]
+        state: "present"
